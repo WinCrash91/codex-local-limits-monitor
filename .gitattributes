@@ -1,0 +1,4 @@
+# Keep repository text consistent across operating systems.
+* text=auto eol=lf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

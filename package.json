@@ -1,0 +1,17 @@
+{
+  "name": "codex-local-limits-monitor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monitor local de los límites de Codex",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node launcher.cjs",
+    "start:server": "node server.cjs",
+    "test": "node --test test/monitor.test.cjs test/tray.test.cjs",
+    "test:ui": "node test/live-ui-check.cjs",
+    "test:tray-host": "powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File tray-host.ps1 -VerifyIcons",
+    "test:tray-probe": "node tray.cjs --probe"
+  }
+}

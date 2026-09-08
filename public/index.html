@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Monitor de límites Codex</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main>
+    <h1>Límites de consumo</h1>
+    <p class="intro">Codex de tu cuenta ChatGPT · porcentajes restantes</p>
+    <section class="monitor" aria-label="Límites de Codex" data-status="waiting">
+      <span class="name">CODEX</span>
+      <div class="limit"><span>5H</span><strong id="five">—</strong></div>
+      <div class="limit"><span>SEM</span><strong id="week">—</strong></div>
+      <span class="age" id="age" title="Minutos desde la última lectura correcta">Sin lectura</span>
+      <button id="refresh" type="button" aria-label="Actualizar límites de Codex" title="Actualizar ahora">↻</button>
+    </section>
+    <section class="resets" aria-label="Próximos reinicios">
+      <span>Reinicio 5H: <strong id="five-reset">—</strong></span>
+      <span>Reinicio semanal: <strong id="week-reset">—</strong></span>
+    </section>
+    <section class="forecast-panel" aria-label="Estimaciones de agotamiento">
+      <div class="forecast-card">
+        <span>5H · ritmo de los últimos 2 min</span>
+        <strong id="five-forecast">Calculando…</strong>
+      </div>
+      <div class="forecast-card">
+        <span>Semanal · ritmo medio desde el inicio</span>
+        <strong id="week-forecast">Calculando…</strong>
+      </div>
+    </section>
+    <section class="chart-card" aria-labelledby="chart-title">
+      <div class="chart-heading"><h2 id="chart-title">Últimos 120 minutos</h2><span><i class="legend five-line"></i>5H <i class="legend week-line"></i>Semanal <i class="legend weekly-theory-line"></i>Consumo semanal lineal</span></div>
+      <svg id="chart" viewBox="0 0 720 240" role="img" aria-label="Gráfico lineal de porcentajes restantes de 5H y semanal, y línea teórica de consumo semanal lineal durante los últimos 120 minutos">
+        <line class="grid" x1="48" y1="20" x2="700" y2="20"></line><line class="grid" x1="48" y1="110" x2="700" y2="110"></line><line class="grid" x1="48" y1="200" x2="700" y2="200"></line>
+        <text x="4" y="25">100%</text><text x="14" y="115">50%</text><text x="23" y="205">0%</text>
+        <path id="five-path" class="line five-line" d=""></path><path id="week-path" class="line week-line" d=""></path><path id="weekly-theory-path" class="line weekly-theory-line" d=""></path>
+        <text id="chart-empty" x="360" y="116" text-anchor="middle">Esperando al menos dos lecturas…</text>
+        <text x="48" y="228">-120 min</text><text x="674" y="228">ahora</text>
+      </svg>
+    </section>
+    <p id="status" role="status" aria-live="polite">Conectando con el lector local…</p>
+    <p class="note">Actualización automática cada 30 segundos mientras esta app esté en marcha. El historial se conserva localmente durante 120 minutos. La línea discontinua muestra el porcentaje semanal restante que correspondería a un consumo lineal desde el inicio de la semana hasta su reinicio. La estimación semanal usa el consumo acumulado desde ese inicio y redondea su resultado a la hora. No es una medición instantánea ni un contador de tokens.</p>
+    <p class="note">Fuente: <code>account/rateLimits/read</code>. Estos límites corresponden a Codex, no a todos los modelos del chat web.</p>
+  </main>
+</body>
+</html>
