@@ -14,7 +14,7 @@ El 6 de septiembre de 2026 se comprobó con datos reales:
 - Vista de escritorio y móvil de 390 píxeles sin desbordamiento horizontal.
 - 26 pruebas automatizadas superadas y ninguna incidencia de consola en la interfaz antes de la desconexión simulada.
 
-No usa Rainmeter, Electron, widgets de terceros ni la infraestructura de widgets de StarNet.
+No usa Rainmeter, Electron ni widgets de terceros.
 
 ## Uso
 
@@ -125,7 +125,3 @@ node test\live-ui-check.cjs
 - Windows puede colocar inicialmente el icono en el menú de iconos ocultos del área de notificación.
 - Una política corporativa que bloquee Windows PowerShell o Windows Forms impedirá iniciar la bandeja, pero no el servidor web.
 - La bandeja no se registra para arrancar automáticamente con Windows.
-
-## Relación con StarNet
-
-La aplicación no utiliza StarNet en el arranque, en la lectura de Codex ni en la bandeja. No modifica su instalación, sus rutinas ni su catálogo de widgets.
