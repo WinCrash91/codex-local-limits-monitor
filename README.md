@@ -30,13 +30,23 @@ http://127.0.0.1:47831
 
 No hay paquetes npm que instalar. El monitor utiliza módulos integrados de Node.js y, solo para el icono nativo, las bibliotecas Windows Forms y System.Drawing del sistema operativo.
 
-Para iniciar conjuntamente el servidor y la bandeja en Windows, ejecutar `start.cmd` desde esta carpeta, o:
+Para iniciar conjuntamente el servidor y la bandeja en Windows, ejecutar `start.cmd` desde esta carpeta mediante el Explorador o una consola normal de Windows, o:
 
 ```cmd
 node launcher.cjs
 ```
 
 Si también está disponible npm, `npm start` ejecuta el mismo comando. Para arrancar solo el servidor web, sin bandeja, usar `node server.cjs` (o `npm run start:server`). En sistemas distintos de Windows, el lanzador omite automáticamente la bandeja y mantiene el monitor web.
+
+### Arranque desde un agente en Windows
+
+El monitor inicia `codex app-server`, que necesita acceder con normalidad al estado de la sesión y escribir datos internos bajo `%USERPROFILE%\.codex`. Por tanto, un agente **debe arrancar el lanzador como un proceso normal del usuario de Windows, fuera de su sandbox**, usando el mecanismo de autorización o escalado que proporcione su entorno. No requiere ejecutar como administrador ni aceptar un aviso de UAC.
+
+No basta con ejecutar `start.cmd`, `node launcher.cjs`, `npm start` o `Start-Process` desde una consola que continúa dentro del sandbox: el servidor web puede abrir el puerto, pero `codex app-server` hereda las restricciones, no puede inicializar su estado y la interfaz queda en `lectura no disponible`. Si el agente no puede solicitar ejecución fuera del sandbox, debe pedir al usuario que ejecute `start.cmd` manualmente desde el Explorador o una consola normal.
+
+Después del arranque, el agente debe comprobar `GET http://127.0.0.1:47831/api/limits`. Una respuesta HTTP 200 solo demuestra que el servidor web está activo; el monitor está realmente operativo cuando la respuesta contiene `"status":"ok"` y `latest` no es `null`. Antes de reintentarlo fuera del sandbox hay que cerrar la instancia anterior para evitar que conserve el puerto 47831.
+
+No se debe solucionar este problema moviendo `CODEX_HOME` al repositorio ni concediendo acceso de escritura amplio a `.codex`, porque ese directorio contiene estado privado administrado por Codex.
 
 Para detener todo lo iniciado por el lanzador desde su terminal, pulsar Ctrl+C. La opción **Salir** del menú de bandeja cierra únicamente el cliente de bandeja; el servidor continúa funcionando.
 
