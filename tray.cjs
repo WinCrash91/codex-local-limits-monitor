@@ -34,7 +34,8 @@ if (process.platform !== 'win32') {
   const client = createTrayClient({ baseUrl, onPresentation(presentation) {
     connected = presentation.connected;
     if (probe) console.log(JSON.stringify({ event: 'probe-presentation', ...presentation }));
-    send({ type: 'state', color: presentation.color, tooltip: presentation.tooltip });
+    send({ type: 'state', color: presentation.color, tooltip: presentation.tooltip,
+      history: presentation.history });
   } });
   client.start();
 

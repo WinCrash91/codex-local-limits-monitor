@@ -3,6 +3,7 @@
 const OFFLINE_PRESENTATION = Object.freeze({
   color: 'gray',
   tooltip: 'Codex 5H: sin datos',
+  history: [],
   connected: false
 });
 
@@ -14,7 +15,8 @@ function presentationFromState(state) {
   const status = state?.fiveHourStatus;
   if (!status || !['gray', 'green', 'yellow', 'red'].includes(status.color)
     || typeof status.tooltip !== 'string') return OFFLINE_PRESENTATION;
-  return { color: status.color, tooltip: status.tooltip, connected: true };
+  const history = Array.isArray(state.history) ? state.history : [];
+  return { color: status.color, tooltip: status.tooltip, history, connected: true };
 }
 
 function createTrayClient({ baseUrl, fetchImpl = globalThis.fetch, onPresentation = () => {},

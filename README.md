@@ -56,7 +56,7 @@ Para detener todo lo iniciado por el lanzador desde su terminal, pulsar Ctrl+C. 
 - `server.cjs` continúa siendo la única fuente de verdad. Calcula la tasa observada de 5H, su color y la proyección a partir del mismo `latest` e histórico que usa la web.
 - `tray.cjs` consulta `GET /api/limits` cada 5 segundos. No inicia Codex, no abre otro `app-server` y no ejecuta `account/rateLimits/read`.
 - Si el servidor todavía no está disponible, muestra gris y reintenta con esperas de 1, 2, 4, 8, 16 y hasta 30 segundos. Al recuperarse vuelve al intervalo normal.
-- `tray-host.ps1` contiene únicamente la integración nativa con `System.Windows.Forms.NotifyIcon`: crea los cuatro iconos, muestra el tooltip y gestiona ratón y menú.
+- `tray-host.ps1` contiene únicamente la integración nativa con `System.Windows.Forms.NotifyIcon`: crea los cuatro iconos, muestra el tooltip y gestiona ratón y menú. Al mantener el cursor sobre el icono durante 700 ms, muestra un gráfico nativo con las lecturas 5H y semanal de los últimos 60 minutos; se oculta al mover el ratón.
 
 El color aplica exactamente estos umbrales sobre la caída observada durante los últimos 2 minutos:
 
@@ -70,6 +70,7 @@ El tooltip muestra el porcentaje 5H restante y los minutos estimados, `En pausa`
 Interacciones:
 
 - clic izquierdo: abre `http://127.0.0.1:47831` en el navegador predeterminado;
+- **Fijar gráfico en pantalla**: mantiene el gráfico siempre visible y delante de las demás ventanas; se puede mover arrastrando cualquier punto del gráfico. La misma opción permite desfijarlo y ocultarlo;
 - **Actualizar ahora**: hace POST al endpoint local `/api/refresh` con la cabecera ya exigida por el servidor;
 - **Abrir monitor**: abre el mismo monitor en el navegador predeterminado;
 - **Salir**: libera el icono, el menú, temporizadores y el proceso de bandeja, sin cerrar el servidor.

@@ -74,7 +74,7 @@ test('el cliente reintenta con espera exponencial y vuelve al intervalo normal a
   assert.equal(scheduled.at(-1), 2000);
   await client.pollNow();
   assert.deepEqual(presentations.at(-1), {
-    color: 'green', tooltip: 'Codex 5H: 90 % restante · En pausa', connected: true
+    color: 'green', tooltip: 'Codex 5H: 90 % restante · En pausa', history: [], connected: true
   });
   assert.equal(scheduled.at(-1), 5000);
   assert.ok(cancelled.length >= 2);
@@ -102,6 +102,8 @@ test('el sondeo solo lee /api/limits y Actualizar ahora usa el POST protegido ex
 
 test('valida presentaciones recibidas y limita la espera de reconexión', () => {
   assert.deepEqual(presentationFromState({}), OFFLINE_PRESENTATION);
+  const samples = [{ collectedAt: new Date(end).toISOString(), fiveHourRemainingPercent: 90, weeklyRemainingPercent: 70 }];
+  assert.deepEqual(presentationFromState({ fiveHourStatus: { color: 'green', tooltip: 'ok' }, history: samples }).history, samples);
   assert.equal(retryDelay(1), 1000);
   assert.equal(retryDelay(6), 30000);
   assert.equal(retryDelay(100), 30000);
