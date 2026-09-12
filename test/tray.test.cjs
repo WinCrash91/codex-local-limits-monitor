@@ -108,3 +108,63 @@ test('valida presentaciones recibidas y limita la espera de reconexión', () => 
   assert.equal(retryDelay(6), 30000);
   assert.equal(retryDelay(100), 30000);
 });
+
+const { EventEmitter, once } = require('node:events');
+const { spawn } = require('node:child_process');
+const { createLauncher, stopTree } = require('../launcher.cjs');
+
+test('el tray reinicia sin duplicar servidores y Salir cancela un reinicio pendiente', async () => {
+  const launched = [];
+  const stops = [];
+  const launcher = createLauncher({ platform: 'win32', forkProcess(file) {
+    const child = new EventEmitter();
+    child.file = require('node:path').basename(file);
+    launched.push(child);
+    return child;
+  }, stopProcess(child) {
+    return new Promise(resolve => stops.push({ child, finish() { child.emit('exit'); resolve(); } }));
+  } });
+  const tray = launched[1];
+  tray.emit('message', { type: 'restart' });
+  tray.emit('message', { type: 'restart' });
+  assert.equal(stops.length, 1);
+  assert.equal(launched.length, 2);
+  stops[0].finish();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(launched.map(child => child.file), ['server.cjs', 'tray.cjs', 'server.cjs']);
+  tray.emit('message', { type: 'restart' });
+  tray.emit('message', { type: 'shutdown' });
+  assert.equal(stops.length, 2);
+  stops[1].finish();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(stops[2].child, tray);
+  stops[2].finish();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(launched.length, 3);
+  await launcher.restart();
+  assert.equal(launched.length, 3);
+});
+
+test('Windows cierra un árbol real de padre, hijo y nieto', { skip: process.platform !== 'win32', timeout: 15000 }, async () => {
+  const childCode = `const {spawn}=require('node:child_process');
+    const child=spawn(process.execPath,['-e','setTimeout(()=>process.exit(0),10000)'],{windowsHide:true,stdio:'ignore'});
+    console.log(JSON.stringify([process.ppid,process.pid,child.pid])); setTimeout(()=>process.exit(0),10000);`;
+  const parent = spawn(process.execPath, ['-e', `require('node:child_process').spawn(process.execPath,
+    ['-e',${JSON.stringify(childCode)}],{windowsHide:true,stdio:['ignore','inherit','inherit']}); setTimeout(()=>process.exit(0),10000);`],
+  { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+  try {
+    const lines = require('node:readline').createInterface({ input: parent.stdout });
+    const [line] = await once(lines, 'line');
+    lines.close();
+    const pids = JSON.parse(line);
+    assert.equal(pids[0], parent.pid);
+    await stopTree(parent);
+    for (let attempt = 0; attempt < 50; attempt++) {
+      if (pids.every(pid => { try { process.kill(pid, 0); return false; } catch { return true; } })) return;
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    assert.fail('Quedaron procesos del árbol activos');
+  } finally {
+    await stopTree(parent);
+  }
+});

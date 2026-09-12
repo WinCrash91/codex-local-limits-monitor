@@ -67,7 +67,10 @@ if (process.platform !== 'win32') {
     } else if (event.event === 'refresh') {
       void client.refresh().catch(() => {});
     } else if (event.event === 'exit') {
-      shutdown();
+      if (process.connected && !probe) process.send({ type: 'shutdown' });
+      else shutdown();
+    } else if (event.event === 'restart') {
+      if (process.connected && !probe) process.send({ type: 'restart' });
     } else if (event.event === 'duplicate') {
       if (probe) console.error('Ya existe un cliente de bandeja activo.');
     }

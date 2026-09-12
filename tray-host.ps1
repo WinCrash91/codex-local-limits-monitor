@@ -95,11 +95,13 @@ $pinItem = [System.Windows.Forms.ToolStripMenuItem]::new(('Fijar ' + $chartWord 
 $refreshItem = [System.Windows.Forms.ToolStripMenuItem]::new('Actualizar ahora')
 $openItem = [System.Windows.Forms.ToolStripMenuItem]::new('Abrir monitor')
 $exitItem = [System.Windows.Forms.ToolStripMenuItem]::new('Salir')
+$restartItem = [System.Windows.Forms.ToolStripMenuItem]::new('Reiniciar servidor')
 [void]$menu.Items.Add($pinItem)
 [void]$menu.Items.Add([System.Windows.Forms.ToolStripSeparator]::new())
 [void]$menu.Items.Add($refreshItem)
 [void]$menu.Items.Add($openItem)
 [void]$menu.Items.Add([System.Windows.Forms.ToolStripSeparator]::new())
+[void]$menu.Items.Add($restartItem)
 [void]$menu.Items.Add($exitItem)
 
 $script:cleaned = $false
@@ -165,7 +167,7 @@ function Paint-Chart([System.Object]$sender, [System.Windows.Forms.PaintEventArg
       return [System.Drawing.PointF]::new([float]$px, [float]$py)
     }
     foreach ($fieldAndPen in @(@('fiveHourRemainingPercent', $fivePen), @('weeklyRemainingPercent', $weekPen))) {
-      $points = @($samples | ForEach-Object { Point-For $_ $fieldAndPen[0] })
+      $points = @($samples | Where-Object { $null -ne $_.($fieldAndPen[0]) } | ForEach-Object { Point-For $_ $fieldAndPen[0] })
       if ($points.Count -gt 1) { $graphics.DrawLines($fieldAndPen[1], $points) }
       elseif ($points.Count -eq 1) { $graphics.FillEllipse([System.Drawing.Brushes]::White, $points[0].X - 2, $points[0].Y - 2, 4, 4) }
     }
@@ -249,7 +251,8 @@ $pinItem.add_Click({
 })
 $refreshItem.add_Click({ Send-TrayEvent @{ event = 'refresh' } })
 $openItem.add_Click({ Open-Monitor })
-$exitItem.add_Click({ Send-TrayEvent @{ event = 'exit' }; Close-Tray })
+$restartItem.add_Click({ Send-TrayEvent @{ event = 'restart' } })
+$exitItem.add_Click({ Send-TrayEvent @{ event = 'exit' } })
 
 $lineReader = [CodexMonitor.ConsoleLineReader]::new()
 $lineReader.Start()

@@ -12,8 +12,12 @@ function normalizeLimits(result, now = Date.now()) {
     throw new Error('No se recibió el límite de Codex.');
   }
   const windows = [snapshot.primary, snapshot.secondary].filter(Boolean);
+  if (!windows.some(w => [300, 10080].includes(w.windowDurationMins))) {
+    throw new Error('No se recibió ninguna ventana de Codex compatible.');
+  }
   function windowFor(minutes) {
     const matches = windows.filter(w => w.windowDurationMins === minutes);
+    if (matches.length === 0) return null;
     if (matches.length !== 1) throw new Error(`Falta una ventana válida de ${minutes} minutos.`);
     const w = matches[0];
     if (!Number.isFinite(w.usedPercent) || w.usedPercent < 0 || w.usedPercent > 100) {
@@ -29,7 +33,7 @@ function normalizeLimits(result, now = Date.now()) {
       resetsAt: reset
     };
   }
-  // Publish both windows atomically: a partial response cannot renew an old timestamp.
+  // Missing windows are unavailable, never zero usage or stale values.
   return {
     source: SOURCE,
     collectedAt: new Date(now).toISOString(),

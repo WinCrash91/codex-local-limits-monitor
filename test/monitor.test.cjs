@@ -51,9 +51,32 @@ test('el backend conserva toda la precisión recibida; el frontend decide cómo 
 test('una ventana ausente o duplicada no se sustituye por 100%', () => {
   const response = fixture();
   response.rateLimits.secondary = null;
-  assert.throws(() => normalizeLimits(response), /10080/);
+  assert.equal(normalizeLimits(response).weekly, null);
   response.rateLimits.secondary = response.rateLimits.primary;
   assert.throws(() => normalizeLimits(response), /300/);
+});
+
+test('solo semanal: actualiza y persiste los datos sin inventar la ventana de 5H', async () => {
+  const response = fixture();
+  response.rateLimits.primary = response.rateLimits.secondary;
+  response.rateLimits.secondary = null;
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'codex-weekly-'));
+  const historyFile = path.join(directory, 'history.json');
+  try {
+    const monitor = createMonitor({ historyFile, read: async () => normalizeLimits(response) });
+    await monitor.refresh();
+    const state = monitor.state();
+    assert.equal(state.status, 'ok');
+    assert.equal(state.latest.fiveHour, null);
+    assert.equal(state.latest.weekly.remainingPercent, 97);
+    assert.equal(state.history[0].fiveHourRemainingPercent, null);
+    assert.equal(state.fiveHourStatus.color, 'gray');
+    assert.deepEqual(createMonitor({ historyFile }).state().history, state.history);
+    response.rateLimits.primary = null;
+    assert.throws(() => normalizeLimits(response), /ventana/);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test('rechaza porcentajes imposibles y conserva cero como valor válido', () => {

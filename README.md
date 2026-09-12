@@ -48,7 +48,7 @@ Después del arranque, el agente debe comprobar `GET http://127.0.0.1:47831/api/
 
 No se debe solucionar este problema moviendo `CODEX_HOME` al repositorio ni concediendo acceso de escritura amplio a `.codex`, porque ese directorio contiene estado privado administrado por Codex.
 
-Para detener todo lo iniciado por el lanzador desde su terminal, pulsar Ctrl+C. La opción **Salir** del menú de bandeja cierra únicamente el cliente de bandeja; el servidor continúa funcionando.
+Para detener todo lo iniciado por el lanzador, pulsar Ctrl+C o elegir **Salir** en la bandeja: se cierran el servidor, la bandeja y sus procesos hijos. **Reiniciar servidor** detiene el servidor y sus hijos antes de arrancarlo de nuevo, manteniendo la bandeja abierta. Estas acciones requieren iniciar el monitor con `npm start` o `start.cmd`.
 
 ## Arquitectura de la bandeja
 
@@ -73,7 +73,8 @@ Interacciones:
 - **Fijar gráfico en pantalla**: mantiene el gráfico siempre visible y delante de las demás ventanas; se puede mover arrastrando cualquier punto del gráfico. La misma opción permite desfijarlo y ocultarlo;
 - **Actualizar ahora**: hace POST al endpoint local `/api/refresh` con la cabecera ya exigida por el servidor;
 - **Abrir monitor**: abre el mismo monitor en el navegador predeterminado;
-- **Salir**: libera el icono, el menú, temporizadores y el proceso de bandeja, sin cerrar el servidor.
+- **Reiniciar servidor**: cierra el servidor y sus hijos y lo vuelve a iniciar, conservando la bandeja y el histórico guardado.
+- **Salir**: cierra el servidor, la bandeja y todos sus procesos hijos.
 
 ## Fuente y alcance
 
@@ -96,7 +97,7 @@ La frecuencia es sondeo cada 30 segundos, más el tiempo de respuesta del provee
 - La API del monitor solo expone las dos ventanas y marcas temporales. No publica accountId, créditos de reset ni texto bruto de errores del proveedor.
 - La bandeja accede exclusivamente a la URL loopback del monitor. No tiene endpoints externos, telemetría ni actualización automática propia.
 - Los únicos mensajes enviados al app-server son `initialize`, `initialized` y `account/rateLimits/read`. No inicia conversaciones ni canjea créditos de reinicio.
-- Los valores se conservan durante fallos; la fecha de la última lectura correcta no se renueva hasta recibir otra respuesta válida con ambas ventanas.
+- Los valores se conservan durante fallos; la fecha de la última lectura correcta solo se renueva con una respuesta válida. Si Codex comunica una sola ventana (por ejemplo, solo la semanal tras un cambio de plan), se muestra y guarda esa ventana; la ausente queda en `null`, con «No disponible» y sin porcentaje inventado. Una respuesta sin ninguna ventana compatible o con porcentajes inválidos sigue siendo un fallo.
 - El histórico que alimenta la gráfica se guarda localmente en `data/history.json` y sobrevive al reinicio del servidor. Conserva exclusivamente `collectedAt`, porcentaje restante de 5H y porcentaje restante semanal; no incluye credenciales, ID de cuenta, respuestas brutas ni créditos de reinicio.
 - En cada escritura se descartan las muestras fuera de la ventana móvil de 129 minutos (que contiene los últimos 120 minutos solicitados y coincide con la gráfica). Si el archivo falta o está dañado, el monitor inicia el histórico vacío y continúa funcionando.
 - Las evidencias de prueba sí guardan porcentajes y fechas observados; no guardan credenciales.

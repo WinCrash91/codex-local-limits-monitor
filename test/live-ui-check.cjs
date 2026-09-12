@@ -98,20 +98,22 @@ async function main() {
     // A real account read may consume the full 15-second reader timeout and
     // wait behind a just-started app-server process. Allow that normal startup
     // path before treating the UI as unavailable.
-    await waitFor(`document.querySelector('#five')?.textContent !== '—' && !document.querySelector('#refresh').disabled`, 30000);
+    await waitFor(`document.querySelector('#status')?.textContent.includes('Lectura correcta') && !document.querySelector('#refresh').disabled`, 30000);
+    await waitFor(`fetch('/api/limits').then(r=>r.json()).then(s=>s.history.length >= 2)`, 45000);
     const initial = await snapshot();
     const first = await (await fetch(url + '/api/limits')).json();
-    assert.equal(initial.five, new Intl.NumberFormat('es-ES').format(first.latest.fiveHour.remainingPercent) + ' %');
-    assert.equal(initial.week, new Intl.NumberFormat('es-ES').format(first.latest.weekly.remainingPercent) + ' %');
+    const percent = value => value ? new Intl.NumberFormat('es-ES', { maximumFractionDigits: 1 }).format(value.remainingPercent) + ' %' : '—';
+    assert.equal(initial.five, percent(first.latest.fiveHour));
+    assert.equal(initial.week, percent(first.latest.weekly));
     assert.notEqual(initial.fiveReset, '—');
     assert.notEqual(initial.weekReset, '—');
-    assert.match(initial.fivePath, /^M /);
-    assert.match(initial.weekPath, /^M /);
-    assert.match(initial.weeklyTheoryPath, /^M /);
+    if (first.latest.fiveHour) assert.match(initial.fivePath, /^M /);
+    if (first.latest.weekly) assert.match(initial.weekPath, /^M /);
+    if (first.latest.weekly?.resetsAt) assert.match(initial.weeklyTheoryPath, /^M /);
     assert.equal(initial.chartTitle, 'Últimos 120 minutos');
     assert.match(initial.tabTitle, /^(🟢|🟡|🔴|⚪) Monitor de límites Codex$/);
-    assert.ok(['En pausa', 'Sin proyección'].includes(initial.fiveForecast) || /^≈ \d+ min hasta agotarse$/.test(initial.fiveForecast));
-    assert.ok(initial.weekForecast === 'En pausa' || /^≈ \d{1,2}\/\d{1,2}\/\d{2}, \d{2}$/.test(initial.weekForecast));
+    assert.ok(['En pausa', 'Sin proyección', 'No disponible'].includes(initial.fiveForecast) || /^≈ \d+ min hasta agotarse$/.test(initial.fiveForecast));
+    assert.ok(['En pausa', 'Sin datos para estimar'].includes(initial.weekForecast) || /^≈ \d{1,2}\/\d{1,2}\/\d{2}, \d{2}$/.test(initial.weekForecast));
     assert.equal(initial.chartEmptyDisplay, 'none');
     await delay(2200);
     await clickRefresh();

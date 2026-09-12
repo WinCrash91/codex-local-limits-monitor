@@ -15,8 +15,9 @@ function normaliseSample(sample) {
   const fiveHourRemainingPercent = sample?.fiveHourRemainingPercent;
   const weeklyRemainingPercent = sample?.weeklyRemainingPercent;
   if (!Number.isFinite(timestamp)
-    || !Number.isFinite(fiveHourRemainingPercent)
-    || !Number.isFinite(weeklyRemainingPercent)
+    || (fiveHourRemainingPercent !== null && !Number.isFinite(fiveHourRemainingPercent))
+    || (weeklyRemainingPercent !== null && !Number.isFinite(weeklyRemainingPercent))
+    || (fiveHourRemainingPercent === null && weeklyRemainingPercent === null)
     || fiveHourRemainingPercent < 0 || fiveHourRemainingPercent > 100
     || weeklyRemainingPercent < 0 || weeklyRemainingPercent > 100) return null;
   return { collectedAt: new Date(timestamp).toISOString(), fiveHourRemainingPercent, weeklyRemainingPercent };
@@ -87,8 +88,8 @@ function createMonitor({ read = readCodexLimits, now = Date.now, pollMs = 30000,
       // does not discard the current graph window.
       history = trimHistory([...history, {
         collectedAt: data.collectedAt,
-        fiveHourRemainingPercent: data.fiveHour.remainingPercent,
-        weeklyRemainingPercent: data.weekly.remainingPercent
+        fiveHourRemainingPercent: data.fiveHour?.remainingPercent ?? null,
+        weeklyRemainingPercent: data.weekly?.remainingPercent ?? null
       }], now());
       saveHistory(historyFile, history);
       error = null;
